@@ -1,0 +1,19 @@
+{
+    "name": "tcpsh-mcp",
+    "version": "1.0.0",
+    "description": "MCP server for tcpsh — interactive TCP connection manager tools",
+    "type": "module",
+    "bin": {
+        "tcpsh-mcp": "src/index.js"
+    },
+    "scripts": {
+        "start": "node src/index.js"
+    },
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.29.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "license": "MIT"
+}
