@@ -144,7 +144,7 @@ running a local in-process manager.  This is useful when:
 Start a `tcpsh` server on the target machine:
 
 ```bash
-tcpsh --server 0.0.0.0:9000
+tcpsh -server 0.0.0.0:9000
 ```
 
 The token printed at startup encrypts all traffic with **ChaCha20-Poly1305**.
