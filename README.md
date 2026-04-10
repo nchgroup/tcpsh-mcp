@@ -57,8 +57,20 @@ Add to your MCP host configuration:
 ### `open_port`
 ```
 port   (number, required)  TCP port to listen on
-host   (string, optional)  Bind address — default: 0.0.0.0
+host   (string, optional)  Bind address or interface name — default: 0.0.0.0
 ```
+
+`host` accepts an IP address, a network interface name, or can be omitted:
+
+```
+open_port(4444)                  # bind 0.0.0.0:4444
+open_port(4444, "127.0.0.1")     # loopback only
+open_port(4444, "tun0")          # resolves tun0 → its IPv4 address
+open_port(443,  "eth0")          # resolves eth0 → its IPv4 address
+```
+
+In standalone mode (no `TCPSH_SERVER`) the interface is resolved locally via `os.networkInterfaces()`.  
+In remote mode the interface name is sent as-is to the tcpsh server, which resolves it there.
 
 ### `close_port`
 ```

@@ -28,13 +28,13 @@ export function buildTools(mgr) {
                 type: 'object',
                 properties: {
                     port: { type: 'number', description: 'TCP port to listen on (1-65535)' },
-                    host: { type: 'string', description: 'Bind address (default: 0.0.0.0)', default: '0.0.0.0' },
+                    host: { type: 'string', description: 'Bind address or network interface name, e.g. "127.0.0.1", "tun0", "eth0" (default: 0.0.0.0)', default: '0.0.0.0' },
                 },
                 required: ['port'],
             },
             handler: async ({ port, host = '0.0.0.0' }) => {
-                await mgr.openPort(port, host);
-                return `Listening on ${host}:${port}`;
+                const boundAddr = await mgr.openPort(port, host);
+                return `Listening on ${boundAddr}`;
             },
         },
 

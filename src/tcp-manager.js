@@ -5,8 +5,29 @@
  */
 
 import net from 'net';
+import os from 'os';
 import { createWriteStream } from 'fs';
 import { EventEmitter } from 'events';
+
+/**
+ * Resolves a bind address: returns the host as-is if it is an IP or empty,
+ * otherwise treats it as a network interface name (e.g. "tun0") and returns
+ * its first IPv4 address.
+ * @param {string} host
+ * @returns {string}
+ */
+function resolveHost(host) {
+    if (!host || host === '0.0.0.0') return host;
+    // Already an IP?
+    if (net.isIP(host)) return host;
+    // Try interface lookup
+    const ifaces = os.networkInterfaces();
+    const addrs = ifaces[host];
+    if (!addrs) throw new Error(`Unknown host or interface: "${host}"`);
+    const entry = addrs.find(a => a.family === 'IPv4' && !a.internal);
+    if (!entry) throw new Error(`Interface "${host}" has no IPv4 address`);
+    return entry.address;
+}
 
 // ── Session ──────────────────────────────────────────────────────────────────
 
@@ -147,6 +168,7 @@ export class TcpManager extends EventEmitter {
 
     openPort(port, host = '0.0.0.0') {
         if (this.#servers.has(port)) throw new Error(`Port ${port} is already open`);
+        const bindHost = resolveHost(host);
 
         const server = net.createServer(socket => {
             const sess = new Session(socket, port);
@@ -175,9 +197,9 @@ export class TcpManager extends EventEmitter {
         server.on('error', err => this.emit('error', { port, message: err.message }));
 
         return new Promise((res, rej) => {
-            server.listen(port, host, () => {
+            server.listen(port, bindHost, () => {
                 this.#servers.set(port, server);
-                res();
+                res(`${bindHost || '0.0.0.0'}:${port}`);
             });
             server.once('error', rej);
         });
