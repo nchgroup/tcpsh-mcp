@@ -24,6 +24,10 @@ const TAG_SIZE = 16;
 const LEN_FIELD = 4;
 const MAX_FRAME = 4 * 1024 * 1024;
 
+// Frame type bytes (must match proto.go).
+const FRAME_RESPONSE = 0x52; // 'R'
+const FRAME_EVENT = 0x45; // 'E'
+
 // ── Key derivation ─────────────────────────────────────────────────────────
 
 function tokenToKey(token) {
@@ -125,9 +129,18 @@ export class RemoteTcpManager {
             this.#recvBuf = this.#recvBuf.slice(LEN_FIELD + frameLen);
 
             const plain = decodeFrame(this.#key, frame);
-            const text = plain.toString('utf8');
 
-            // Unsolicited event (no pending command)? Emit to stderr as info.
+            // First byte is the frame type; the rest is the text payload.
+            const typ = plain[0];
+            const text = plain.slice(1).toString('utf8');
+
+            if (typ === FRAME_EVENT) {
+                // Unsolicited push event — print to stderr and keep waiting.
+                process.stderr.write(`[tcpsh-server] ${text}\n`);
+                continue;
+            }
+
+            // FrameResponse (or unknown): resolve the next pending command.
             if (this.#pendingQueue.length === 0) {
                 process.stderr.write(`[tcpsh-server] ${text}\n`);
                 continue;
